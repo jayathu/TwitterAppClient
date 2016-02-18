@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/ivProfilePic"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="@drawable/twitter"
+        android:background="#AAAAAA"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="With my Runkeeper details"
+        android:id="@+id/tvBody"
+        android:textColor="#03A9F4"
+        android:layout_gravity="center_vertical"
+        android:gravity="left"
+        android:paddingLeft="20dp"
+        />
+
+</LinearLayout>
