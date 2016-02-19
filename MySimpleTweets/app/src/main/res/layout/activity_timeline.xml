@@ -22,6 +22,8 @@
         android:layout_margin="16dp"
         app:layout_anchor="@id/rvTweets"
         app:layout_anchorGravity="bottom|right|end"
+        app:layout_behavior="com.codepath.apps.mysimpletweets.ScrollAwareFABBehaviour"
+        android:onClick="onComposeTweet"
 />
 
 </android.support.design.widget.CoordinatorLayout>
