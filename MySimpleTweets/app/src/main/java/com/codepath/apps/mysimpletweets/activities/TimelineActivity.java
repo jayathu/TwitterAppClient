@@ -5,7 +5,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Toast;
 
+import com.codepath.apps.mysimpletweets.EndlessRecyclerViewScrollListener;
 import com.codepath.apps.mysimpletweets.R;
 import com.codepath.apps.mysimpletweets.TwitterApplication;
 import com.codepath.apps.mysimpletweets.TwitterClient;
@@ -40,11 +44,32 @@ public class TimelineActivity extends AppCompatActivity {
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         rvResults.setLayoutManager(linearLayoutManager);
 
+        rvResults.addOnScrollListener(new EndlessRecyclerViewScrollListener(linearLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount) {
+
+                populateTimeline();
+                int curSize = tweetRecyclerAdapter.getItemCount();
+                tweetRecyclerAdapter.notifyItemRangeInserted(curSize, tweets.size() - 1);
+            }
+        });
+
         client = TwitterApplication.getRestClient(); //singleton client
         populateTimeline();
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.home, menu);
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    public void onComposeAction(MenuItem menuItem)
+    {
+        Toast.makeText(this, "Happy !", Toast.LENGTH_SHORT).show();
+    }
 
     // Send an API request to get the timeline json
     // Fill the RecyclerView by creating the tweet object from the json
