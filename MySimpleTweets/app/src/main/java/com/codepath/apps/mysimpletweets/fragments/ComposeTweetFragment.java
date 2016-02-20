@@ -23,7 +23,7 @@ public class ComposeTweetFragment extends DialogFragment {
 
     public interface ComposeTweetDialogActionListener {
         //public void onComposeTweet(Tweet tweet);
-        public void onComposeTweet(String tweetMsg);
+        void onComposeTweet(String tweetMsg);
     }
 
     private EditText etCompose;

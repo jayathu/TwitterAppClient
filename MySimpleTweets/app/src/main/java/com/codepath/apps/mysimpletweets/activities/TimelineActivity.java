@@ -73,6 +73,8 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                tweets.clear();
+                tweetRecyclerAdapter.notifyDataSetChanged();
                 populateTimeline();
             }
         });
@@ -135,7 +137,6 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
 
-                //tweets.clear();
                 tweets.addAll(Tweet.fromJSONArray(response));
                 tweetRecyclerAdapter.notifyDataSetChanged();
                 lastTweetId = tweets.get(tweets.size() - 1).getUid();
@@ -167,13 +168,15 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
         });
     }
 
-    public void onComposeTweet(String tweet) {
+    public void onComposeTweet(final String tweet) {
 
         client.postTweet(new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 Log.d("SUCCESS", response.toString());
 
+                tweets.clear();
+                tweetRecyclerAdapter.notifyDataSetChanged();
                 populateTimeline();
             }
 
