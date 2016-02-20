@@ -1,6 +1,7 @@
 package com.codepath.apps.mysimpletweets.models;
 
 import android.text.format.DateUtils;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,7 +50,7 @@ import java.util.Locale;
     //Parse the JSON + Store the data, encapsulate state logic or display logic
 public class Tweet {
 
-    private String body;
+    public String body;
     private long uid; //unique id for the tweet
     private String createdAt;
     private User user;
@@ -77,6 +78,7 @@ public class Tweet {
         try {
             tweet.body = jsonObject.getString("text");
             tweet.uid = jsonObject.getLong("id");
+            Log.d("DEBUG", tweet.uid + "\n");
             tweet.createdAt = jsonObject.getString("created_at");
             tweet.user = User.fromJSON(jsonObject.getJSONObject("user"));
         } catch (JSONException e) {

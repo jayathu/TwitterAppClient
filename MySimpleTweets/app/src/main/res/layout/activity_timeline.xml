@@ -8,10 +8,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".activities.TimelineActivity">
 
-    <android.support.v7.widget.RecyclerView
-    android:id="@+id/rvTweets"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+
+
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/swipeContainer">
+
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rvTweets"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
 
     <android.support.design.widget.FloatingActionButton
         android:src="@drawable/composetmp"
@@ -23,7 +36,6 @@
         app:layout_anchor="@id/rvTweets"
         app:layout_anchorGravity="bottom|right|end"
         app:layout_behavior="com.codepath.apps.mysimpletweets.ScrollAwareFABBehaviour"
-        android:onClick="onComposeTweet"
-/>
+        android:onClick="onComposeTweet"/>
 
 </android.support.design.widget.CoordinatorLayout>

@@ -19,6 +19,13 @@ import com.codepath.apps.mysimpletweets.R;
  */
 public class ComposeTweetFragment extends DialogFragment {
 
+    private ComposeTweetDialogActionListener listener;
+
+    public interface ComposeTweetDialogActionListener {
+        //public void onComposeTweet(Tweet tweet);
+        public void onComposeTweet(String tweetMsg);
+    }
+
     private EditText etCompose;
     private Button btnTweet;
     private ImageView ivProfilePic;
@@ -59,5 +66,22 @@ public class ComposeTweetFragment extends DialogFragment {
         getDialog().getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
+
+        View.OnClickListener onClickComposeTweet = new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+
+                listener = (ComposeTweetDialogActionListener) getActivity();
+                listener.onComposeTweet(etCompose.getText().toString());
+                dismiss();
+
+            }
+        };
+
+        btnTweet = (Button) view.findViewById(R.id.btnTweet);
+        btnTweet.setOnClickListener(onClickComposeTweet);
+
     }
+
 }

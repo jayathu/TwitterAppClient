@@ -2,6 +2,7 @@ package com.codepath.apps.mysimpletweets.activities;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -27,14 +28,17 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class TimelineActivity extends AppCompatActivity {
+public class TimelineActivity extends AppCompatActivity implements ComposeTweetFragment.ComposeTweetDialogActionListener{
 
+    final long INIT_ID = 1;
+    private long lastTweetId = INIT_ID;
     private TwitterClient client;
     private AccountCredentials credentials;
 
     private ArrayList<Tweet> tweets;
     private TweetRecyclerAdapter tweetRecyclerAdapter;
     private RecyclerView rvResults;
+    private SwipeRefreshLayout swipeContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +58,7 @@ public class TimelineActivity extends AppCompatActivity {
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
 
-                populateTimeline();
+                populateTimelineOnRefresh();
                 int curSize = tweetRecyclerAdapter.getItemCount();
                 tweetRecyclerAdapter.notifyItemRangeInserted(curSize, tweets.size() - 1);
             }
@@ -63,6 +67,23 @@ public class TimelineActivity extends AppCompatActivity {
         client = TwitterApplication.getRestClient(); //singleton client
         populateTimeline();
         getAccountCredentials();
+
+        swipeContainer = (SwipeRefreshLayout)findViewById(R.id.swipeContainer);
+
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                populateTimeline();
+            }
+        });
+
+        // Configure the refreshing colors
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
+
+
     }
 
     @Override
@@ -86,32 +107,47 @@ public class TimelineActivity extends AppCompatActivity {
     // Send an API request to get the timeline json
     // Fill the RecyclerView by creating the tweet object from the json
     private void populateTimeline() {
-        client.getHomeTimeline(new JsonHttpResponseHandler() {
-            // SUCCESS
+        client.getLatestTweets(new JsonHttpResponseHandler() {
 
+            // SUCCESS
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
-                Log.d("DEBUG", response.toString());
-
-                //JSON HERE
-                //DESERIALI`ZE JSON
-                //CREATE MODELS
-                //LOAD THE MODELS DATA INTO VIEW
 
                 tweets.addAll(Tweet.fromJSONArray(response));
                 tweetRecyclerAdapter.notifyDataSetChanged();
-
+                lastTweetId = tweets.get(tweets.size() - 1).getUid();
+                Log.d("SUCCESS", lastTweetId + "");
+                swipeContainer.setRefreshing(false);
             }
 
-
             // FAILURE
-
-
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                 Log.d("DEBUG", errorResponse.toString());
             }
-        });
+        }, 1);
+    }
+
+    private void populateTimelineOnRefresh() {
+        client.getOlderTweets(new JsonHttpResponseHandler() {
+
+            // SUCCESS
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+
+                //tweets.clear();
+                tweets.addAll(Tweet.fromJSONArray(response));
+                tweetRecyclerAdapter.notifyDataSetChanged();
+                lastTweetId = tweets.get(tweets.size() - 1).getUid();
+                Log.d("SUCCESS", lastTweetId + "");
+            }
+
+            // FAILURE
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.d("DEBUG", errorResponse.toString());
+            }
+        }, lastTweetId);
     }
 
     private void getAccountCredentials() {
@@ -131,6 +167,25 @@ public class TimelineActivity extends AppCompatActivity {
         });
     }
 
+    public void onComposeTweet(String tweet) {
+
+        client.postTweet(new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                Log.d("SUCCESS", response.toString());
+
+                populateTimeline();
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.d("FAILED", errorResponse.toString());
+
+            }
+        }, tweet);
+
+    }
+
     private void showComposeDialog() {
 
         FragmentManager fm = getSupportFragmentManager();
@@ -139,4 +194,6 @@ public class TimelineActivity extends AppCompatActivity {
         composeTweetFragment.show(fm, "dialog_compose_tweet");
 
     }
+
+
 }
