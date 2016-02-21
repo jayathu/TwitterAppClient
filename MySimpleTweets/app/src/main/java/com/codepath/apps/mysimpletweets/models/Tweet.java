@@ -1,7 +1,13 @@
 package com.codepath.apps.mysimpletweets.models;
 
+import android.database.Cursor;
 import android.text.format.DateUtils;
-import android.util.Log;
+
+import com.activeandroid.Cache;
+import com.activeandroid.Model;
+import com.activeandroid.annotation.Column;
+import com.activeandroid.annotation.Table;
+import com.activeandroid.query.Select;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,13 +53,26 @@ import java.util.Locale;
 
  */
 
-    //Parse the JSON + Store the data, encapsulate state logic or display logic
-public class Tweet {
+    //ActiveAndroid Model : Tweet
 
+//Parse the JSON + Store the data, encapsulate state logic or display logic
+@Table(name = "Tweets")
+public class Tweet extends Model {
+
+    @Column(name = "body")
     public String body;
-    private long uid; //unique id for the tweet
-    private String createdAt;
-    private User user;
+
+    @Column(name = "uid", unique = true, onUniqueConflict = Column.ConflictAction.REPLACE)
+    public long uid; //unique id for the tweet
+
+    @Column(name = "created_at")
+    public String createdAt;
+
+    @Column(name = "relative_time_ago")
+    public String relativeTimeAgo;
+
+    @Column(name = "user", onUpdate = Column.ForeignKeyAction.CASCADE, onDelete = Column.ForeignKeyAction.CASCADE)
+    public User user;
 
     public User getUser() {
         return user;
@@ -67,8 +86,19 @@ public class Tweet {
         return uid;
     }
 
-    public String getCreatedAt() {
-        return createdAt;
+    public Tweet() {
+        super();
+    }
+
+    // Return cursor for result set for all Tweet items
+    public static Cursor fetchResultCursor() {
+        String tableName = Cache.getTableInfo(Tweet.class).getTableName();
+        // Query all items without any conditions
+        String resultRecords = new Select(tableName + ".*, " + tableName + ".Id as _id").
+                from(Tweet.class).toSql();
+        // Execute query on the underlying ActiveAndroid SQLite database
+        Cursor resultCursor = Cache.openDatabase().rawQuery(resultRecords, null);
+        return resultCursor;
     }
 
     public static Tweet fromJSON(JSONObject jsonObject) {

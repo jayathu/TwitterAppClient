@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.codepath.apps.mysimpletweets.R;
 import com.codepath.apps.mysimpletweets.models.Tweet;
 
@@ -44,7 +43,7 @@ public class TweetRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.View
 
         TweetItemViewHolder viewHolder = (TweetItemViewHolder) holder;
         Tweet tweet = mTweets.get(position);
-        Glide.with(context).load(tweet.getUser().getProfileImageUrl()).into(viewHolder.ivProfilePic);
+        //Glide.with(context).load(tweet.getUser().getProfileImageUrl()).into(viewHolder.ivProfilePic);
         viewHolder.tvBody.setText(tweet.getBody());
         viewHolder.tvUsername.setText(tweet.getUser().getScreenName());
         viewHolder.tvDatePosted.setText(tweet.getRelativeTimeAgo());

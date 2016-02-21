@@ -1,5 +1,8 @@
 package com.codepath.apps.mysimpletweets.activities;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -12,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.activeandroid.query.Select;
 import com.codepath.apps.mysimpletweets.EndlessRecyclerViewScrollListener;
 import com.codepath.apps.mysimpletweets.R;
 import com.codepath.apps.mysimpletweets.TwitterApplication;
@@ -20,13 +24,16 @@ import com.codepath.apps.mysimpletweets.adapters.TweetRecyclerAdapter;
 import com.codepath.apps.mysimpletweets.fragments.ComposeTweetFragment;
 import com.codepath.apps.mysimpletweets.models.AccountCredentials;
 import com.codepath.apps.mysimpletweets.models.Tweet;
+import com.codepath.apps.mysimpletweets.models.User;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.apache.http.Header;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class TimelineActivity extends AppCompatActivity implements ComposeTweetFragment.ComposeTweetDialogActionListener{
 
@@ -39,12 +46,24 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
     private TweetRecyclerAdapter tweetRecyclerAdapter;
     private RecyclerView rvResults;
     private SwipeRefreshLayout swipeContainer;
+    private String account_id;
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("ACCOUNT_ID", account_id);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timeline);
 
+        account_id = "";
+        if(savedInstanceState != null) {
+            account_id = savedInstanceState.getString("ACCOUNT_ID");
+        }
 
         tweets = new ArrayList<>();
 
@@ -109,63 +128,88 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
     // Send an API request to get the timeline json
     // Fill the RecyclerView by creating the tweet object from the json
     private void populateTimeline() {
-        client.getLatestTweets(new JsonHttpResponseHandler() {
 
-            // SUCCESS
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+        if(!isOnline()) {
+            tweets.clear();;
+            tweetRecyclerAdapter.notifyDataSetChanged();
+            tweets.addAll(GetCachedTweets());
+            tweetRecyclerAdapter.notifyDataSetChanged();
+        }else {
 
-                tweets.addAll(Tweet.fromJSONArray(response));
-                tweetRecyclerAdapter.notifyDataSetChanged();
-                lastTweetId = tweets.get(tweets.size() - 1).getUid();
-                Log.d("SUCCESS", lastTweetId + "");
-                swipeContainer.setRefreshing(false);
-            }
+            client.getLatestTweets(new JsonHttpResponseHandler() {
 
-            // FAILURE
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                Log.d("DEBUG", errorResponse.toString());
-            }
-        }, 1);
+                // SUCCESS
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+
+                    tweets.clear();
+                    tweetRecyclerAdapter.notifyDataSetChanged();
+
+                    tweets.addAll(Tweet.fromJSONArray(response));
+                    tweetRecyclerAdapter.notifyDataSetChanged();
+
+                    lastTweetId = tweets.get(tweets.size() - 1).getUid();
+                    Log.d("SUCCESS", lastTweetId + "");
+                    swipeContainer.setRefreshing(false);
+
+                    StoreTweetsToLocalDatabase(tweets);
+                }
+
+                // FAILURE
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                    Log.d("DEBUG", errorResponse.toString());
+                }
+            }, 1);
+        }
     }
 
     private void populateTimelineOnRefresh() {
-        client.getOlderTweets(new JsonHttpResponseHandler() {
+        if(!isOnline()){
+                Toast.makeText(this, "Please connect to Internet.", Toast.LENGTH_SHORT).show();
+        }else {
+            client.getOlderTweets(new JsonHttpResponseHandler() {
 
-            // SUCCESS
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                // SUCCESS
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
 
-                tweets.addAll(Tweet.fromJSONArray(response));
-                tweetRecyclerAdapter.notifyDataSetChanged();
-                lastTweetId = tweets.get(tweets.size() - 1).getUid();
-                Log.d("SUCCESS", lastTweetId + "");
-            }
+                    tweets.addAll(Tweet.fromJSONArray(response));
+                    tweetRecyclerAdapter.notifyDataSetChanged();
+                    lastTweetId = tweets.get(tweets.size() - 1).getUid();
+                    Log.d("SUCCESS", lastTweetId + "");
+                }
 
-            // FAILURE
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                Log.d("DEBUG", errorResponse.toString());
-            }
-        }, lastTweetId);
+                // FAILURE
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                    Log.d("DEBUG", errorResponse.toString());
+                }
+            }, lastTweetId);
+        }
     }
 
     private void getAccountCredentials() {
 
-        client.getAccountCredientials(new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                Log.d("DEBUG", response.toString());
-                credentials = AccountCredentials.fromJSON(response);
-                Log.d("DEBUG CREDENTIALS", credentials.getProfile_image_url());
-            }
+        if(!isOnline()) {
+            Log.d("CREDENTIALS" , account_id);
+            credentials = AccountCredentials.findCredentials(account_id);
+        }else {
+            client.getAccountCredientials(new JsonHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                    Log.d("DEBUG", response.toString());
+                    credentials = AccountCredentials.fromJSON(response);
+                    account_id = credentials.getAccountId();
+//                    Log.d("DEBUG CREDENTIALS", credentials.getProfile_image_url());
+                }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                Log.d("DEBUG", errorResponse.toString());
-            }
-        });
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                    Log.d("DEBUG", errorResponse.toString());
+                }
+            });
+        }
     }
 
     public void onComposeTweet(final String tweet) {
@@ -175,8 +219,8 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 Log.d("SUCCESS", response.toString());
 
-                tweets.clear();
-                tweetRecyclerAdapter.notifyDataSetChanged();
+                //tweets.clear();
+                //tweetRecyclerAdapter.notifyDataSetChanged();
                 populateTimeline();
             }
 
@@ -198,5 +242,52 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
 
     }
 
+    private Boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+    }
 
+    public boolean isOnline() {
+        Runtime runtime = Runtime.getRuntime();
+        try {
+            Process ipProcess = runtime.exec("/system/bin/ping -c 1 8.8.8.8");
+            int     exitValue = ipProcess.waitFor();
+            return (exitValue == 0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private void StoreTweetsToLocalDatabase(ArrayList<Tweet> tweets) {
+
+        for(Tweet t : tweets){
+
+            User user = User.findOrCreate(t.getUser());
+
+            Tweet tweet = new Tweet();
+            tweet.uid = t.getUid();
+            tweet.body = t.getBody();
+            tweet.relativeTimeAgo = t.getRelativeTimeAgo();
+            tweet.createdAt = t.createdAt;
+            tweet.user = user;
+
+            tweet.save();
+        }
+    }
+
+    private List<Tweet> GetCachedTweets() {
+
+        return new Select().from(Tweet.class).limit(100).execute();
+    }
+
+    private void SaveAccountCredentials(AccountCredentials credentials) {
+        AccountCredentials accountCredentials = new AccountCredentials(credentials);
+        accountCredentials.save();
+
+    }
 }

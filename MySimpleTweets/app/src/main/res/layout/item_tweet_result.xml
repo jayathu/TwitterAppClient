@@ -26,11 +26,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/tvBody"
-        android:text="I have a Tweet!"
+        android:text="I have a Tweet! http://www.google.com"
         android:textColor="@color/black"
         android:layout_below="@id/tvUsername"
         android:layout_toRightOf="@+id/ivProfilePic"
-        android:layout_toEndOf="@+id/ivProfilePic" />
+        android:layout_toEndOf="@+id/ivProfilePic"
+        android:autoLink="all"
+        android:linksClickable="true"/>
 
     <TextView
         android:layout_width="wrap_content"

@@ -1,5 +1,13 @@
 package com.codepath.apps.mysimpletweets.models;
 
+import android.database.Cursor;
+
+import com.activeandroid.Cache;
+import com.activeandroid.Model;
+import com.activeandroid.annotation.Column;
+import com.activeandroid.annotation.Table;
+import com.activeandroid.query.Select;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,12 +24,23 @@ import org.json.JSONObject;
       "profile_sidebar_border_color": "C0DEED",
       "profile_image_url":
  */
-public class User {
+//ActiveAndroid Model: USER
 
-    private String name;
-    private long uid;
-    private String screenName;
-    private String profileImageUrl;
+@Table(name = "Users")
+public class User extends Model {
+
+    @Column(name = "name")
+    public String name;
+
+    @Column(name = "uid", unique = true, onUniqueConflict = Column.ConflictAction.REPLACE)
+    public long uid;
+
+    @Column(name = "screen_name")
+    public String screenName;
+
+    @Column(name = "profile_image_url")
+    public String profileImageUrl;
+
 
     public String getName() {
         return name;
@@ -39,6 +58,17 @@ public class User {
         return profileImageUrl;
     }
 
+    // Return cursor for result set for all todo items
+    public static Cursor fetchResultCursor() {
+        String tableName = Cache.getTableInfo(User.class).getTableName();
+        // Query all items without any conditions
+        String resultRecords = new Select(tableName + ".*, " + tableName + ".Id as _id").
+                from(User.class).toSql();
+        // Execute query on the underlying ActiveAndroid SQLite database
+        Cursor resultCursor = Cache.openDatabase().rawQuery(resultRecords, null);
+        return resultCursor;
+    }
+
     public static User fromJSON(JSONObject jsonObject) {
 
         User user = new User();
@@ -54,5 +84,15 @@ public class User {
 
 
         return user;
+    }
+
+    public static User findOrCreate(User user) {
+        User existingUser = new Select().from(User.class).where("uid = ?", user.getUid()).executeSingle();
+        if(existingUser == null) {
+            existingUser = user;
+            existingUser.save();
+        }
+        return existingUser;
+
     }
 }

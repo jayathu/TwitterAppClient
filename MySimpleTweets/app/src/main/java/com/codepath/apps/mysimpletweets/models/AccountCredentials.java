@@ -1,5 +1,10 @@
 package com.codepath.apps.mysimpletweets.models;
 
+import com.activeandroid.Model;
+import com.activeandroid.annotation.Column;
+import com.activeandroid.annotation.Table;
+import com.activeandroid.query.Select;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -11,7 +16,7 @@ import org.json.JSONObject;
 /*
 
 {
-   "id":33143481,
+   "account_id":33143481,
    "id_str":"33143481",
    "name":"jayashree",
    "screen_name":"jayathu",
@@ -21,16 +26,23 @@ import org.json.JSONObject;
 }
  */
 
+@Table(name = "AccountCredentials")
+public class AccountCredentials extends Model {
 
-public class AccountCredentials {
+    @Column(name = "account_id", unique = true, onUniqueConflict = Column.ConflictAction.REPLACE)
+    private String account_id;
 
-    private String id;
+    @Column(name = "name")
     private String name;
+
+    @Column(name = "screen_name")
     private String screen_name;
+
+    @Column(name = "profile_image_url")
     private String profile_image_url;
 
-    public String getId() {
-        return id;
+    public String getAccountId() {
+        return account_id;
     }
 
     public String getName() {
@@ -45,11 +57,24 @@ public class AccountCredentials {
         return profile_image_url;
     }
 
+    public AccountCredentials() {
+        super();
+    }
+
+    public AccountCredentials(AccountCredentials credentials) {
+        super();
+
+        account_id = credentials.getAccountId();
+        name = credentials.getName();
+        screen_name = credentials.getScreen_name();
+        profile_image_url = credentials.getProfile_image_url();
+    }
+
     public static AccountCredentials fromJSON(JSONObject jsonObject) {
 
         AccountCredentials credentials = new AccountCredentials();
         try{
-            credentials.id = jsonObject.getString("id");
+            credentials.account_id = jsonObject.getString("account_id");
             credentials.name = jsonObject.getString("name");
             credentials.screen_name = jsonObject.getString("screen_name");
             credentials.profile_image_url = jsonObject.getString("profile_image_url");
@@ -59,5 +84,9 @@ public class AccountCredentials {
         }
 
         return credentials;
+    }
+
+    public static AccountCredentials findCredentials(String id) {
+        return new Select().from(AccountCredentials.class).where("account_id = ?", id).executeSingle();
     }
 }
