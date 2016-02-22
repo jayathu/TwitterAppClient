@@ -32,11 +32,14 @@
             android:name=".activities.LoginActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme">
+
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -53,7 +56,11 @@
             android:label="@string/timeLineName" />
         <activity
             android:name=".activities.TestActivity"
-            android:label="Test Tweets" />
+            android:label="Test Tweets">
+
+
+
+        </activity>
         <activity android:name=".activities.TweetDetails"></activity>
     </application>
 

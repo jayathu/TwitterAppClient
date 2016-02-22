@@ -13,6 +13,7 @@
         android:layout_alignParentLeft="true"
         android:paddingLeft="20dp"
         android:paddingTop="20dp"
+        android:onClick="onCancelTweet"
         android:src="@drawable/cancel"/>
 
     <ImageView
