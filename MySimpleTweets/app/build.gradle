@@ -39,4 +39,8 @@ dependencies {
     //Glide Support for Google's supported picture loading
     compile 'com.github.bumptech.glide:glide:3.5.2'
     compile 'com.android.support:support-v4:23.0.0'
+
+
+    //GSON
+    compile 'com.google.code.gson:gson:2.4'
 }

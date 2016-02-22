@@ -77,6 +77,7 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
 
+                Log.d("SWIPTE TO REFRESH", tweets.size() + "");
                 populateTimelineOnRefresh();
                 int curSize = tweetRecyclerAdapter.getItemCount();
                 tweetRecyclerAdapter.notifyItemRangeInserted(curSize, tweets.size() - 1);
@@ -145,13 +146,13 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
                     tweets.clear();
                     tweetRecyclerAdapter.notifyDataSetChanged();
 
-                    tweets.addAll(Tweet.fromJSONArray(response));
+                    //tweets.addAll(Tweet.fromJSONArray(response));
+                    tweets.addAll(Tweet.fromGSONArray(response));
                     tweetRecyclerAdapter.notifyDataSetChanged();
 
                     lastTweetId = tweets.get(tweets.size() - 1).getUid();
-                    Log.d("SUCCESS", lastTweetId + "");
+                    Log.d("lastTweedId", lastTweetId + "");
                     swipeContainer.setRefreshing(false);
-
                     StoreTweetsToLocalDatabase(tweets);
                 }
 
@@ -174,10 +175,10 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
 
-                    tweets.addAll(Tweet.fromJSONArray(response));
+                    tweets.addAll(Tweet.fromGSONArray(response));
                     tweetRecyclerAdapter.notifyDataSetChanged();
                     lastTweetId = tweets.get(tweets.size() - 1).getUid();
-                    Log.d("SUCCESS", lastTweetId + "");
+                    Log.d("Refresh Id", lastTweetId + "");
                 }
 
                 // FAILURE
@@ -219,8 +220,6 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 Log.d("SUCCESS", response.toString());
 
-                //tweets.clear();
-                //tweetRecyclerAdapter.notifyDataSetChanged();
                 populateTimeline();
             }
 
@@ -270,10 +269,10 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
             User user = User.findOrCreate(t.getUser());
 
             Tweet tweet = new Tweet();
-            tweet.uid = t.getUid();
-            tweet.body = t.getBody();
+            tweet.id = t.getUid();
+            tweet.text = t.getBody();
             tweet.relativeTimeAgo = t.getRelativeTimeAgo();
-            tweet.createdAt = t.createdAt;
+            tweet.created_at = t.created_at;
             tweet.user = user;
 
             tweet.save();

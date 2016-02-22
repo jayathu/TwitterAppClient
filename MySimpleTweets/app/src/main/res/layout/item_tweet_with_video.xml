@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/ivProfilePic"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/twitter"
+
+        android:padding="5dp"></ImageView>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tvUsername"
+        android:text="Username"
+        android:textColor="@color/black"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:layout_toRightOf="@+id/ivProfilePic"
+        android:layout_toEndOf="@+id/ivProfilePic" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tvBody"
+        android:text="I have a Tweet! http://www.google.com"
+        android:textColor="@color/black"
+        android:layout_below="@id/tvUsername"
+        android:layout_toRightOf="@+id/ivProfilePic"
+        android:layout_toEndOf="@+id/ivProfilePic"
+        android:autoLink="all"
+        android:linksClickable="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tvDatePosted"
+        android:paddingRight="10dp"
+        android:text="2h"
+        android:layout_alignParentRight="true"/>
+
+    <VideoView
+        android:id="@+id/ivMediaVideo"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_centerInParent="true"
+        android:scaleType="centerCrop"
+        android:adjustViewBounds="true"
+        android:src="@drawable/defaultpic"
+        android:layout_below="@+id/tvBody"
+        android:layout_alignRight="@+id/tvDatePosted"
+        android:layout_alignEnd="@+id/tvDatePosted"
+        android:layout_toRightOf="@+id/ivProfilePic"
+        android:layout_toEndOf="@+id/ivProfilePic" />
+
+</RelativeLayout>

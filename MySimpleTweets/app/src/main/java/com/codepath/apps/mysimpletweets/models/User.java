@@ -1,15 +1,9 @@
 package com.codepath.apps.mysimpletweets.models;
 
-import android.database.Cursor;
-
-import com.activeandroid.Cache;
 import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
 import com.activeandroid.query.Select;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * Created by jnagaraj on 2/17/16.
@@ -33,13 +27,13 @@ public class User extends Model {
     public String name;
 
     @Column(name = "uid", unique = true, onUniqueConflict = Column.ConflictAction.REPLACE)
-    public long uid;
+    public long id;
 
     @Column(name = "screen_name")
     public String screenName;
 
     @Column(name = "profile_image_url")
-    public String profileImageUrl;
+    public String profile_image_url;
 
 
     public String getName() {
@@ -47,7 +41,7 @@ public class User extends Model {
     }
 
     public long getUid() {
-        return uid;
+        return id;
     }
 
     public String getScreenName() {
@@ -55,28 +49,18 @@ public class User extends Model {
     }
 
     public String getProfileImageUrl() {
-        return profileImageUrl;
+        return profile_image_url;
     }
 
-    // Return cursor for result set for all todo items
-    public static Cursor fetchResultCursor() {
-        String tableName = Cache.getTableInfo(User.class).getTableName();
-        // Query all items without any conditions
-        String resultRecords = new Select(tableName + ".*, " + tableName + ".Id as _id").
-                from(User.class).toSql();
-        // Execute query on the underlying ActiveAndroid SQLite database
-        Cursor resultCursor = Cache.openDatabase().rawQuery(resultRecords, null);
-        return resultCursor;
-    }
 
-    public static User fromJSON(JSONObject jsonObject) {
+    /*public static User fromJSON(JSONObject jsonObject) {
 
         User user = new User();
         try {
             user.name = jsonObject.getString("name");
-            user.uid = jsonObject.getLong("id");
+            user.uid = jsonObject.getLong("uid");
             user.screenName = jsonObject.getString("screen_name");
-            user.profileImageUrl = jsonObject.getString("profile_image_url");
+            user.profile_image_url = jsonObject.getString("profile_image_url");
 
         }catch (JSONException e){
             e.printStackTrace();
@@ -84,7 +68,8 @@ public class User extends Model {
 
 
         return user;
-    }
+    }*/
+
 
     public static User findOrCreate(User user) {
         User existingUser = new Select().from(User.class).where("uid = ?", user.getUid()).executeSingle();

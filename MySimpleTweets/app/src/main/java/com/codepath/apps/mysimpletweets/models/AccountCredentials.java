@@ -74,7 +74,7 @@ public class AccountCredentials extends Model {
 
         AccountCredentials credentials = new AccountCredentials();
         try{
-            credentials.account_id = jsonObject.getString("account_id");
+            credentials.account_id = jsonObject.getString("id");
             credentials.name = jsonObject.getString("name");
             credentials.screen_name = jsonObject.getString("screen_name");
             credentials.profile_image_url = jsonObject.getString("profile_image_url");

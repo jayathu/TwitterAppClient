@@ -1,13 +1,13 @@
 package com.codepath.apps.mysimpletweets.models;
 
-import android.database.Cursor;
 import android.text.format.DateUtils;
+import android.util.Log;
 
-import com.activeandroid.Cache;
 import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
-import com.activeandroid.query.Select;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,51 +22,20 @@ import java.util.Locale;
  * Created by jnagaraj on 2/17/16.
  */
 
-
-/*
-
-
-[
-  {
-    "coordinates": null,
-    "truncated": false,
-    "created_at": "Tue Aug 28 21:16:23 +0000 2012",
-    "favorited": false,
-    "id_str": "240558470661799936",
-    "in_reply_to_user_id_str": null,
-    "entities": {
-      "urls": [
-
-      ],
-      "hashtags": [
-
-      ],
-      "user_mentions": [
-
-      ]
-    },
-
-    {
-        ...
-    }
-]
-
- */
-
     //ActiveAndroid Model : Tweet
 
 //Parse the JSON + Store the data, encapsulate state logic or display logic
 @Table(name = "Tweets")
 public class Tweet extends Model {
 
-    @Column(name = "body")
-    public String body;
+    @Column(name = "text")
+    public String text;
 
     @Column(name = "uid", unique = true, onUniqueConflict = Column.ConflictAction.REPLACE)
-    public long uid; //unique id for the tweet
+    public long id; //unique id for the tweet
 
     @Column(name = "created_at")
-    public String createdAt;
+    public String created_at;
 
     @Column(name = "relative_time_ago")
     public String relativeTimeAgo;
@@ -74,67 +43,41 @@ public class Tweet extends Model {
     @Column(name = "user", onUpdate = Column.ForeignKeyAction.CASCADE, onDelete = Column.ForeignKeyAction.CASCADE)
     public User user;
 
+    @Column(name = "extended_entities")
+    private ExtendedEntities extended_entities;
+
+    @Column(name = "tweet_image_url")
+    private String tweetImageUrl = "";
+
+    @Column(name = "tweet_video_url")
+    private String tweetVideoUrl = "";
+
+    public String getTweetImageUrl() {
+        return tweetImageUrl;
+    }
+
+    public String getTweetVideoUrl() {
+       return tweetVideoUrl;
+    }
+
     public User getUser() {
         return user;
     }
 
     public String getBody() {
-        return body;
+        return text;
     }
 
     public long getUid() {
-        return uid;
+        return id;
+    }
+
+    public ExtendedEntities getExtended_entities() {
+        return extended_entities;
     }
 
     public Tweet() {
         super();
-    }
-
-    // Return cursor for result set for all Tweet items
-    public static Cursor fetchResultCursor() {
-        String tableName = Cache.getTableInfo(Tweet.class).getTableName();
-        // Query all items without any conditions
-        String resultRecords = new Select(tableName + ".*, " + tableName + ".Id as _id").
-                from(Tweet.class).toSql();
-        // Execute query on the underlying ActiveAndroid SQLite database
-        Cursor resultCursor = Cache.openDatabase().rawQuery(resultRecords, null);
-        return resultCursor;
-    }
-
-    public static Tweet fromJSON(JSONObject jsonObject) {
-        Tweet tweet = new Tweet();
-
-
-        try {
-            tweet.body = jsonObject.getString("text");
-            tweet.uid = jsonObject.getLong("id");
-            tweet.createdAt = jsonObject.getString("created_at");
-            tweet.user = User.fromJSON(jsonObject.getJSONObject("user"));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return tweet;
-    }
-
-    public static ArrayList<Tweet> fromJSONArray(JSONArray jsonArray) {
-        ArrayList<Tweet> tweets = new ArrayList<>();
-
-        for(int i = 0; i < jsonArray.length(); i++) {
-            try {
-                JSONObject tweetJson = jsonArray.getJSONObject(i);
-                Tweet tweet = Tweet.fromJSON(tweetJson);
-                if(tweet != null) {
-                    tweets.add(tweet);
-                }
-
-            }catch (JSONException e) {
-                e.printStackTrace();
-                continue;
-            }
-        }
-
-        return tweets;
     }
 
     // getRelativeTimeAgo("Mon Apr 01 21:16:23 +0000 2014");
@@ -146,7 +89,7 @@ public class Tweet extends Model {
 
         String relativeDate = "";
         try {
-            long dateMillis = sf.parse(createdAt).getTime();
+            long dateMillis = sf.parse(created_at).getTime();
             relativeDate = DateUtils.getRelativeTimeSpanString(dateMillis,
                     System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS).toString();
         } catch (ParseException e) {
@@ -155,5 +98,87 @@ public class Tweet extends Model {
 
         return relativeDate;
     }
+
+    public static Tweet fromGSON(JSONObject jsonObject)
+    {
+        Gson gson = new GsonBuilder().create();
+        Tweet tweet = gson.fromJson(jsonObject.toString(), Tweet.class);
+
+        ExtendedEntities extendedEntities = tweet.getExtended_entities();
+        if(extendedEntities != null) {
+            ArrayList<Media> medias = extendedEntities.getMedia();
+            for (Media media : medias) {
+
+
+                if (media.getType().equals("photo")) {
+
+                } else {
+                    VideoInfo videoInfo = media.getVideo_info();
+                    for (Variants variants : videoInfo.getVariants()) {
+                    //    Log.d("VIDEO URL ", variants.getUrl());
+                        Log.d("VIDEO URL : ", variants.getUrl());
+                    }
+                }
+            }
+        }
+
+
+        return tweet;
+    }
+
+    public static ArrayList<Tweet> fromGSONArray(JSONArray jsonArray) {
+        ArrayList<Tweet> tweets = new ArrayList<>();
+
+        for (int i = 0; i < jsonArray.length(); i++) {
+            try {
+                JSONObject tweetJson = jsonArray.getJSONObject(i);
+
+                Tweet tweet = Tweet.fromGSON(tweetJson);
+                if (tweet != null) {
+                    tweet.SetMediaUrls();
+                    tweets.add(tweet);
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                continue;
+            }
+        }
+
+        return tweets;
+    }
+
+    public boolean mediaTypePhoto;
+    public boolean mediaTypeVideo;
+
+    private void SetMediaUrls() {
+
+        mediaTypePhoto = false;
+        mediaTypeVideo = false;
+
+        ExtendedEntities entities = getExtended_entities();
+        if(entities != null) {
+            for(Media media : entities.getMedia()) {
+                if(media.getType().equals("photo")) {
+                    tweetImageUrl = media.getMedia_url();
+                    mediaTypePhoto = true;
+                }else if(media.getType().equals("video")){
+                    VideoInfo videoInfo = media.getVideo_info();
+                    tweetImageUrl = null;
+                    for(Variants variants : videoInfo.getVariants()){
+                        if(variants.getContent_type().equals("application/x-mpegURL")) {
+                            tweetImageUrl = variants.getUrl();
+                        }
+                    }
+                    if(videoInfo == null) {
+                        Variants variants = videoInfo.getVariants().get(1);
+                        tweetImageUrl = variants.getUrl();
+                    }
+                    mediaTypeVideo = true;
+                }
+            }
+        }
+    }
+
 
 }
