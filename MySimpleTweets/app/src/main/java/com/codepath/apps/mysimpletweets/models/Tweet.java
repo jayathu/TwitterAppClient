@@ -47,12 +47,36 @@ public class Tweet extends Model {
     private ExtendedEntities extended_entities;
 
     @Column(name = "tweet_image_url")
-    private String tweetImageUrl = "";
+    private String tweetImageUrl = null;
 
     @Column(name = "tweet_video_url")
-    private String tweetVideoUrl = "";
+    private String tweetVideoUrl = null;
+
+    public void setTweetImageUrl(String url) {
+
+        if(url != null) {
+            tweetImageUrl = url;
+        }else {
+            tweetImageUrl = null;
+        }
+
+        }
+
+    public void setTweetVideoUrl(String url) {
+
+        if(url != null) {
+            tweetVideoUrl = url;
+        }else {
+            tweetVideoUrl = null;
+        }
+
+    }
 
     public String getTweetImageUrl() {
+
+        if(tweetImageUrl != null) {
+            Log.v("IMAGE URL", tweetImageUrl);
+        }
         return tweetImageUrl;
     }
 

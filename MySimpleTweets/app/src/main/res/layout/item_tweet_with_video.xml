@@ -3,13 +3,27 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <ImageView
+    <com.makeramen.roundedimageview.RoundedImageView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:id="@+id/ivProfilePic"
+        android:src="@drawable/twitter"
+        android:scaleType="fitCenter"
+        app:riv_corner_radius="5dip"
+        app:riv_border_width="2dip"
+        app:riv_border_color="#EEEEEE"
+
+        app:riv_tile_mode="repeat"
+        app:riv_oval="false" />
+
+    <!--<ImageView
         android:id="@+id/ivProfilePic"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:src="@drawable/twitter"
 
-        android:padding="5dp"></ImageView>
+        android:padding="5dp"></ImageView>-->
 
     <TextView
         android:layout_width="wrap_content"
@@ -42,6 +56,7 @@
         android:text="2h"
         android:layout_alignParentRight="true"/>
 
+
     <VideoView
         android:id="@+id/ivMediaVideo"
         android:layout_width="match_parent"
@@ -49,11 +64,38 @@
         android:layout_centerInParent="true"
         android:scaleType="centerCrop"
         android:adjustViewBounds="true"
+        android:layout_marginTop="20dp"
         android:src="@drawable/defaultpic"
         android:layout_below="@+id/tvBody"
         android:layout_alignRight="@+id/tvDatePosted"
         android:layout_alignEnd="@+id/tvDatePosted"
         android:layout_toRightOf="@+id/ivProfilePic"
         android:layout_toEndOf="@+id/ivProfilePic" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:orientation="horizontal"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:layout_toRightOf="@+id/ivProfilePic"
+        android:layout_toEndOf="@+id/ivProfilePic"
+        android:layout_below="@id/ivMediaVideo">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/reply"/>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/retweet"/>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/like"/>
+    </LinearLayout>
 
 </RelativeLayout>

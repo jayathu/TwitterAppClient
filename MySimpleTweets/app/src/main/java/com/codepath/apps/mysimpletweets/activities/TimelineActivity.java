@@ -1,6 +1,7 @@
 package com.codepath.apps.mysimpletweets.activities;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -10,13 +11,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
 import com.activeandroid.query.Select;
+import com.codepath.apps.mysimpletweets.DividerItemDecoration;
 import com.codepath.apps.mysimpletweets.EndlessRecyclerViewScrollListener;
+import com.codepath.apps.mysimpletweets.ItemClickSupport;
 import com.codepath.apps.mysimpletweets.R;
 import com.codepath.apps.mysimpletweets.TwitterApplication;
 import com.codepath.apps.mysimpletweets.TwitterClient;
@@ -24,12 +25,14 @@ import com.codepath.apps.mysimpletweets.adapters.TweetRecyclerAdapter;
 import com.codepath.apps.mysimpletweets.fragments.ComposeTweetFragment;
 import com.codepath.apps.mysimpletweets.models.AccountCredentials;
 import com.codepath.apps.mysimpletweets.models.Tweet;
+import com.codepath.apps.mysimpletweets.models.TweetParcel;
 import com.codepath.apps.mysimpletweets.models.User;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.apache.http.Header;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.parceler.Parcels;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,6 +52,11 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
     private String account_id;
 
 
+   /* @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }*/
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -58,6 +66,13 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+       /* CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                        .setDefaultFontPath("fonts/GOTHAM-THIN.ttf")
+                        .setFontAttrId(R.attr.fontPath)
+                        .build()
+        );*/
+
         setContentView(R.layout.activity_timeline);
 
         account_id = "";
@@ -70,6 +85,12 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
         tweetRecyclerAdapter = new TweetRecyclerAdapter(tweets);
         rvResults = (RecyclerView)findViewById(R.id.rvTweets);
         rvResults.setAdapter(tweetRecyclerAdapter);
+
+        RecyclerView.ItemDecoration itemDecoration = new
+                DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST);
+        rvResults.addItemDecoration(itemDecoration);
+
+
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         rvResults.setLayoutManager(linearLayoutManager);
 
@@ -82,7 +103,41 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
                 int curSize = tweetRecyclerAdapter.getItemCount();
                 tweetRecyclerAdapter.notifyItemRangeInserted(curSize, tweets.size() - 1);
             }
+
+
         });
+
+        ItemClickSupport.addTo(rvResults).setOnItemClickListener(
+                new ItemClickSupport.OnItemClickListener() {
+                    @Override
+                    public void onItemClicked(RecyclerView recyclerView, int position, View v) {
+
+                        Log.d("PARCEL", "tapped on " + tweets.get(position).text);
+                        Tweet tweet = tweets.get(position);
+                        Intent intent = new Intent(getApplicationContext(), TweetDetails.class);
+                        TweetParcel parcel = new TweetParcel();
+
+                        parcel.Name = tweet.user.name;
+                        parcel.screenName = tweet.user.getScreenName();
+                        parcel.Text = tweet.getBody();
+                        parcel.profileImageUrl = tweet.getUser().getProfileImageUrl();
+                        if(tweet.mediaTypePhoto) {
+
+                            parcel.imageThumbnail = tweet.getTweetImageUrl();
+
+                        }else if(tweet.mediaTypeVideo) {
+
+                            parcel.videoThumnail = tweet.getTweetVideoUrl();
+                        }
+
+
+                        intent.putExtra("TWEET_DETAILS", Parcels.wrap(parcel));
+                        startActivity(intent);
+                    }
+                }
+        );
+
+
 
         client = TwitterApplication.getRestClient(); //singleton client
         populateTimeline();
@@ -108,21 +163,8 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
 
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.home, menu);
-
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    public void onComposeAction(MenuItem menuItem)
-    {
-        Toast.makeText(this, "Happy !", Toast.LENGTH_SHORT).show();
-    }
-
     public void onComposeTweet(View view)
     {
-        Toast.makeText(this, "Happy !", Toast.LENGTH_SHORT).show();
         showComposeDialog();
     }
 
@@ -275,6 +317,9 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
             tweet.created_at = t.created_at;
             tweet.user = user;
 
+            tweet.setTweetImageUrl(t.getTweetImageUrl());
+            tweet.setTweetVideoUrl(t.getTweetVideoUrl());
+
             tweet.save();
         }
     }
@@ -284,9 +329,4 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
         return new Select().from(Tweet.class).limit(100).execute();
     }
 
-    private void SaveAccountCredentials(AccountCredentials credentials) {
-        AccountCredentials accountCredentials = new AccountCredentials(credentials);
-        accountCredentials.save();
-
-    }
 }

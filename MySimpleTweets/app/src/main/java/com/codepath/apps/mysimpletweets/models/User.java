@@ -30,7 +30,7 @@ public class User extends Model {
     public long id;
 
     @Column(name = "screen_name")
-    public String screenName;
+    public String screen_name;
 
     @Column(name = "profile_image_url")
     public String profile_image_url;
@@ -45,7 +45,7 @@ public class User extends Model {
     }
 
     public String getScreenName() {
-        return screenName;
+        return screen_name;
     }
 
     public String getProfileImageUrl() {
