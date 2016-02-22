@@ -45,7 +45,7 @@ The following **additional** features are implemented:
 
 * [x] Rounded Image Views for profile pics and embedded images
 * [x] Implemented Heterogenous Recycler Views
-* 
+* [x] Used Active Android to manage persistence
 
 ## Video Walkthrough 
 
