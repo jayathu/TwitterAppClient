@@ -17,11 +17,15 @@ public class VideoInfo extends Model{
         return variants;
     }
 
+    public void setVariants(ArrayList<Variants> variants) {
+        this.variants = variants;
+    }
+
     @Column(name = "variants")
     private ArrayList<Variants> variants;
 
     public VideoInfo() {
         super();
-        variants = new ArrayList<Variants>();
+        //variants = new ArrayList<Variants>();
     }
 }

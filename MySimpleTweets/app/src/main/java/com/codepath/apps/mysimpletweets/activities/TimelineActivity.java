@@ -24,6 +24,7 @@ import com.codepath.apps.mysimpletweets.TwitterClient;
 import com.codepath.apps.mysimpletweets.adapters.TweetRecyclerAdapter;
 import com.codepath.apps.mysimpletweets.fragments.ComposeTweetFragment;
 import com.codepath.apps.mysimpletweets.models.AccountCredentials;
+import com.codepath.apps.mysimpletweets.models.ExtendedEntities;
 import com.codepath.apps.mysimpletweets.models.Tweet;
 import com.codepath.apps.mysimpletweets.models.TweetParcel;
 import com.codepath.apps.mysimpletweets.models.User;
@@ -31,14 +32,18 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.apache.http.Header;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.parceler.Parcels;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TimelineActivity extends AppCompatActivity implements ComposeTweetFragment.ComposeTweetDialogActionListener{
+
+    private static final boolean TEST_OFFLINE = false;
 
     final long INIT_ID = 1;
     private long lastTweetId = INIT_ID;
@@ -121,11 +126,11 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
                         parcel.screenName = tweet.user.getScreenName();
                         parcel.Text = tweet.getBody();
                         parcel.profileImageUrl = tweet.getUser().getProfileImageUrl();
-                        if(tweet.mediaTypePhoto) {
+                        if(tweet.mediaTypePhoto()) {
 
                             parcel.imageThumbnail = tweet.getTweetImageUrl();
 
-                        }else if(tweet.mediaTypeVideo) {
+                        }else if(tweet.mediaTypeVideo()) {
 
                             parcel.videoThumnail = tweet.getTweetVideoUrl();
                         }
@@ -172,8 +177,18 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
     // Fill the RecyclerView by creating the tweet object from the json
     private void populateTimeline() {
 
+        if(TEST_OFFLINE){
+            tweets.clear();
+            tweetRecyclerAdapter.notifyDataSetChanged();
+            LoadTweetsOffline();
+            tweets.addAll(GetCachedTweets());
+            tweetRecyclerAdapter.notifyDataSetChanged();
+            return;
+        }
+
+
         if(!isOnline()) {
-            tweets.clear();;
+            tweets.clear();
             tweetRecyclerAdapter.notifyDataSetChanged();
             tweets.addAll(GetCachedTweets());
             tweetRecyclerAdapter.notifyDataSetChanged();
@@ -221,6 +236,7 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
                     tweetRecyclerAdapter.notifyDataSetChanged();
                     lastTweetId = tweets.get(tweets.size() - 1).getUid();
                     Log.d("Refresh Id", lastTweetId + "");
+                    StoreTweetsToLocalDatabase(tweets);
                 }
 
                 // FAILURE
@@ -306,19 +322,23 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
 
     private void StoreTweetsToLocalDatabase(ArrayList<Tweet> tweets) {
 
+        Log.d("SAVE ", "StoreTweetsToLocalDatabase");
         for(Tweet t : tweets){
 
             User user = User.findOrCreate(t.getUser());
+            ExtendedEntities entities = ExtendedEntities.createIfExists(t.getExtended_entities());
 
             Tweet tweet = new Tweet();
             tweet.id = t.getUid();
             tweet.text = t.getBody();
             tweet.relativeTimeAgo = t.getRelativeTimeAgo();
             tweet.created_at = t.created_at;
-            tweet.user = user;
 
-            tweet.setTweetImageUrl(t.getTweetImageUrl());
-            tweet.setTweetVideoUrl(t.getTweetVideoUrl());
+            if(entities != null) {
+                tweet.setExtended_entities(entities);
+            }
+
+            tweet.user = user;
 
             tweet.save();
         }
@@ -327,6 +347,42 @@ public class TimelineActivity extends AppCompatActivity implements ComposeTweetF
     private List<Tweet> GetCachedTweets() {
 
         return new Select().from(Tweet.class).limit(100).execute();
+    }
+
+    private void LoadTweetsOffline(){
+        String jsonObjectString = loadJSONFromAsset();
+        try {
+            JSONArray jsonArray = new JSONArray(jsonObjectString);
+            tweets.addAll(Tweet.fromGSONArray(jsonArray));
+
+        }catch(JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private  String loadJSONFromAsset() {
+        String json = null;
+        try {
+
+            InputStream is = getAssets().open("json/home_timeline.json");
+
+            int size = is.available();
+
+            byte[] buffer = new byte[size];
+
+            is.read(buffer);
+
+            is.close();
+
+            json = new String(buffer, "UTF-8");
+
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return json;
+
     }
 
 }

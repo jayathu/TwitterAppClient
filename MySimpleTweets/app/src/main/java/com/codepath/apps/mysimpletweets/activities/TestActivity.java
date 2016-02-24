@@ -15,8 +15,11 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.apache.http.Header;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import butterknife.Bind;
@@ -41,6 +44,9 @@ public class TestActivity extends AppCompatActivity {
         setContentView(R.layout.activity_test);
 
         ButterKnife.bind(this);
+        PrintObject();
+
+
 
         editText.addTextChangedListener(new TextWatcher() {
 
@@ -60,8 +66,7 @@ public class TestActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {
 
                 charLeft = WORD_COUNT - editable.length();
-                if(charLeft > 0) {
-                    //tvcharcount.setText(String.valueOf(editable.length()));
+                if (charLeft > 0) {
                     tvcharcount.setText(String.valueOf(String.valueOf(charLeft)));
                 }
             }
@@ -108,4 +113,50 @@ public class TestActivity extends AppCompatActivity {
                 }
             }, 1);
     }
+
+
+    private void PrintObject()
+    {
+        tweets = new ArrayList<>();
+        String jsonObjectString = loadJSONFromAsset();
+
+        try {
+
+            JSONArray jsonArray = new JSONArray(jsonObjectString);
+            tweets.addAll(Tweet.fromGSONArray(jsonArray));
+
+
+            Log.d("Username = ", tweets.get(4).getUser().getName());
+
+        }catch(JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private  String loadJSONFromAsset() {
+        String json = null;
+        try {
+
+            InputStream is = getAssets().open("json/home_timeline.json");
+
+            int size = is.available();
+
+            byte[] buffer = new byte[size];
+
+            is.read(buffer);
+
+            is.close();
+
+            json = new String(buffer, "UTF-8");
+
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return json;
+
+    }
+
 }

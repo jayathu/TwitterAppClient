@@ -46,42 +46,43 @@ public class Tweet extends Model {
     @Column(name = "extended_entities")
     private ExtendedEntities extended_entities;
 
-    @Column(name = "tweet_image_url")
-    private String tweetImageUrl = null;
-
-    @Column(name = "tweet_video_url")
-    private String tweetVideoUrl = null;
-
-    public void setTweetImageUrl(String url) {
-
-        if(url != null) {
-            tweetImageUrl = url;
-        }else {
-            tweetImageUrl = null;
+    public void setExtended_entities(ExtendedEntities entities) {
+        if(entities != null) {
+            extended_entities = entities;
         }
-
-        }
-
-    public void setTweetVideoUrl(String url) {
-
-        if(url != null) {
-            tweetVideoUrl = url;
-        }else {
-            tweetVideoUrl = null;
-        }
-
     }
 
     public String getTweetImageUrl() {
 
-        if(tweetImageUrl != null) {
-            Log.v("IMAGE URL", tweetImageUrl);
+        if (extended_entities != null) {
+            for (Media m : extended_entities.getMedia()) {
+                if (m.getType().equals("photo")) {
+                    return m.getMedia_url();
+                }
+            }
         }
-        return tweetImageUrl;
+        return "";
     }
 
     public String getTweetVideoUrl() {
-       return tweetVideoUrl;
+
+        if (extended_entities != null) {
+            for (Media m : extended_entities.getMedia()) {
+                if (m.getType().equals("video")) {
+                    VideoInfo videoInfo = m.getVideo_info();
+                    for(Variants variants : videoInfo.getVariants()){
+                        if(variants.getContent_type().equals("application/x-mpegURL")) {
+                           return variants.getUrl();
+                        }
+                    }
+                    if(videoInfo == null) {
+                        Variants variants = videoInfo.getVariants().get(1);
+                        return variants.getUrl();
+                    }
+                }
+            }
+        }
+        return "";
     }
 
     public User getUser() {
@@ -133,13 +134,11 @@ public class Tweet extends Model {
             ArrayList<Media> medias = extendedEntities.getMedia();
             for (Media media : medias) {
 
-
                 if (media.getType().equals("photo")) {
 
                 } else {
                     VideoInfo videoInfo = media.getVideo_info();
                     for (Variants variants : videoInfo.getVariants()) {
-                    //    Log.d("VIDEO URL ", variants.getUrl());
                         Log.d("VIDEO URL : ", variants.getUrl());
                     }
                 }
@@ -159,7 +158,6 @@ public class Tweet extends Model {
 
                 Tweet tweet = Tweet.fromGSON(tweetJson);
                 if (tweet != null) {
-                    tweet.SetMediaUrls();
                     tweets.add(tweet);
                 }
 
@@ -172,10 +170,36 @@ public class Tweet extends Model {
         return tweets;
     }
 
-    public boolean mediaTypePhoto;
-    public boolean mediaTypeVideo;
+    public boolean mediaTypePhoto() {
+        if (extended_entities != null) {
+            Log.v("EXTENDED ENTITIES ", "NOT NULL");
+            if(extended_entities.getMedia() != null) {
 
-    private void SetMediaUrls() {
+                for (Media m : extended_entities.getMedia()) {
+                    Log.d("MEDIA TYPE", m.getType());
+                    if (m.getType().equals("photo")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean mediaTypeVideo() {
+        if (extended_entities != null) {
+            if(extended_entities.getMedia() != null) {
+                for (Media m : extended_entities.getMedia()) {
+                    if (m.getType().equals("video")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+   /* private void SetMediaUrls() {
 
         mediaTypePhoto = false;
         mediaTypeVideo = false;
@@ -202,7 +226,7 @@ public class Tweet extends Model {
                 }
             }
         }
-    }
+    }*/
 
 
 }

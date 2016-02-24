@@ -3,6 +3,7 @@ package com.codepath.apps.mysimpletweets.adapters;
 import android.content.Context;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +38,8 @@ public class TweetRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.View
         context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
+
+        Log.d("TYPE ", viewType + "");
         switch(viewType) {
             case WITHOUT_MEDIA:
                 View v1 = inflater.inflate(R.layout.item_tweet_result, parent, false);
@@ -94,9 +97,9 @@ public class TweetRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.View
     @Override
     public int getItemViewType(int position) {
 
-        if(mTweets.get(position).mediaTypePhoto) {
+        if(mTweets.get(position).mediaTypePhoto()) {
             return WITH_IMAGE;
-        }else if(mTweets.get(position).mediaTypeVideo) {
+        }else if(mTweets.get(position).mediaTypeVideo()) {
             return WITH_VIDEO;
         }else {
             return WITHOUT_MEDIA;
